@@ -1,0 +1,64 @@
+---
+import Layout from "@layouts/BaseLayout.astro";
+import { getSlides } from "@utils/getSlides";
+
+const slides = getSlides()
+  .filter(({ draft }) => !draft)
+  .sort((c1, c2) => (c1.frontmatter.publishedAt > c2.frontmatter.publishedAt ? -1 : 1));
+---
+
+<Layout title="Home">
+  <h1>Slides</h1>
+  {
+    slides.map((slide) => (
+      <a href={`/slides/${slide.id}`}  title={`${slide.frontmatter.description}`} class="slidelink">
+        <b>{slide.frontmatter.title}</b>,
+        <small>{new Date(slide.frontmatter.publishedAt).toLocaleDateString()}</small>
+      </a>
+    ))
+  }
+  
+  <a href="/"> Home </a>
+</Layout>
+
+<style>
+  @import "@theme";
+
+  body {
+    background-color: var(--background);
+    color: var(--main-color);
+    font-family: var(--main-font);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+  }
+
+  body > * {
+    padding: 0 1rem;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--heading-font);
+  }
+
+  .slidelink {
+    padding: 1rem;
+    color: var(--main-color);
+    text-decoration: none;
+    transition: filter 0.2s ease-in-out;
+    
+    background-image: linear-gradient(to right, #ffcf33, #ffffff);
+    background-repeat: no-repeat;
+    background-size: 50% 0.1em; /* Sets the "thickness" */
+    background-position: 0.8rem 88%;  /* Positions it under the text */
+    transition: background-size 0.25s ease-in;
+    &:hover {
+      background-size: 50% 100%;
+    }
+  }
+</style>

@@ -1,7 +1,7 @@
 {
-  "name": "starlight",
+  "name": "aqr-hwu-public",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
@@ -11,7 +11,17 @@
   },
   "dependencies": {
     "@astrojs/starlight": "^0.37.1",
-    "astro": "^5.6.1",
-    "sharp": "^0.34.2"
+    "@tailwindcss/vite": "^4.1.18",
+    "arktype": "^2.1.29",
+    "astro": "^5.16.6",
+    "rehype-mathjax": "^7.1.0",
+    "remark-math": "^6.0.0",
+    "reveal.js": "^5.2.1",
+    "sharp": "^0.34.5",
+    "svelte": "^5.46.0",
+    "tailwindcss": "^4.1.18"
+  },
+  "devDependencies": {
+    "@types/reveal.js": "^5.2.2"
   }
 }

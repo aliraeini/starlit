@@ -1,0 +1,44 @@
+---
+export interface Props {
+  title: string;
+  authors: string[];
+  description?: string;
+  draft?: boolean
+}
+import Layout from "./BaseLayout.astro";
+import "reveal.js/dist/reveal.css";
+import "reveal.js/plugin/highlight/monokai.css";
+import "@theme";
+
+
+const { title, authors, description } = Astro.props;
+---
+
+<Layout {title}>
+  <Fragment slot="head">
+    {description && <meta name="description" content={description} />}
+    {authors.map((author) => <meta name="author" content={author} />)}
+  </Fragment>
+  <div class="reveal">
+    <div class="slides" style="width: 100%; height: 100%;">
+      <section>
+        <h2>{title}</h2>
+        <span>{authors}</span>
+      </section>
+      <slot />
+    </div>
+  </div>
+  <script >
+    import Reveal from "reveal.js"; 
+    import Zoom from "reveal.js/plugin/zoom/zoom.esm.js";
+    import Notes from "reveal.js/plugin/notes/notes.esm.js";
+
+    let deck = new Reveal({
+      autoSlide: 60000,
+      // loop: true,
+      width:1280, height:720, margin:0,
+      plugins: [Zoom, Notes],
+    });
+    deck.initialize();
+  </script>
+</Layout>
