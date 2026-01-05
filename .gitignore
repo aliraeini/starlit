@@ -1,7 +1,12 @@
+
+# Trust pnpm for now
+pnpm-lock.yaml
+
 # build output
 dist/
 # generated types
 .astro/
+.pnpm-store/
 
 # dependencies
 node_modules/
