@@ -20,5 +20,5 @@
     "skipLibCheck": true,
     "exactOptionalPropertyTypes": true
   },
-  "exclude": ["dist"]
+  "exclude": ["dist", "src/utils/syncContent.mjs"]
 }

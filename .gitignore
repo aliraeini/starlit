@@ -1,4 +1,8 @@
 
+# auto-synced content
+src/content/
+src/slides/
+
 # Trust pnpm for now
 pnpm-lock.yaml
 

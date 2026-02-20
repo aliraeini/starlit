@@ -3,8 +3,11 @@
   "type": "module",
   "version": "0.0.2",
   "scripts": {
+    "sync": "node src/utils/syncContent.mjs",
+    "predev": "pnpm run sync",
     "dev": "astro dev",
     "start": "astro dev",
+    "prebuild": "pnpm run sync",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"
