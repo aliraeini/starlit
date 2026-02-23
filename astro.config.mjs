@@ -1,5 +1,6 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
 import starlight from '@astrojs/starlight';
 import tailwindcss from "@tailwindcss/vite";
 import remarkMath from 'remark-math';
@@ -42,5 +43,17 @@ export default defineConfig({
 	markdown: {
 		remarkPlugins: [remarkMath],
 		rehypePlugins: [rehypeMathjax],
+	},
+	vite: {
+		plugins: [
+			viteStaticCopy({
+				targets: [
+					{
+						src: '../public/*',
+						dest: './'  // Copies to the root of the dist/ directory
+					}
+				]
+			})
+		]
 	}
 });
