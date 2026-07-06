@@ -79,6 +79,69 @@ async function sync() {
     if (files.length === 0) {
         console.warn(`Warning: No files found to sync in content directory: ${contentsDir}`);
     }
+
+    // Sort files to make sure index files or folder main entrypoints are chosen first
+    files.sort((a, b) => {
+        const aBase = path.basename(a).toLowerCase();
+        const bBase = path.basename(b).toLowerCase();
+        if (aBase.startsWith('index.')) return -1;
+        if (bBase.startsWith('index.')) return 1;
+        return a.localeCompare(b);
+    });
+
+    function findRoute(filesList, dirName, defaultVal) {
+        const matchedFile = filesList.find(f => {
+            const rel = path.relative(contentsDir, f);
+            const parts = rel.split(path.sep);
+            return parts[0] === 'docs' && parts[1] === dirName && (f.endsWith('.md') || f.endsWith('.mdx'));
+        });
+        if (!matchedFile) return defaultVal;
+        const rel = path.relative(contentsDir, matchedFile);
+        const parts = rel.split(path.sep).slice(1); // remove 'docs'
+        const ext = path.extname(matchedFile);
+        const base = parts.join('/');
+        let route = '/' + base.substring(0, base.length - ext.length).toLowerCase() + '/';
+        if (route.endsWith('/index/')) {
+            route = route.substring(0, route.length - 6);
+        }
+        return route;
+    }
+
+    const depth1Dirs = new Set();
+    const depth1Files = [];
+
+    for (const f of files) {
+        const relToDocs = path.relative(path.join(contentsDir, 'docs'), f);
+        if (relToDocs.startsWith('..')) continue; // outside content/docs
+        const parts = relToDocs.split(path.sep);
+        if (parts.length === 1) {
+            const ext = path.extname(f).toLowerCase();
+            const base = parts[0];
+            if (base !== 'index.mdx' && ['.md', '.mdx', '.markdown'].includes(ext)) {
+                depth1Files.push(f);
+            }
+        } else {
+            depth1Dirs.add(parts[0]);
+        }
+    }
+
+    const sortedDirs = Array.from(depth1Dirs).sort();
+    const sortedFiles = depth1Files.sort((a, b) => path.basename(a).localeCompare(path.basename(b)));
+
+    let generatedActions = '';
+    for (const dir of sortedDirs) {
+        const label = dir.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        const link = findRoute(files, dir, '/' + dir + '/');
+        const icon = (dir === 'eton' || dir === 'notes') ? 'open-book' : 'document';
+        generatedActions += `    - text: "${label}"\n      link: ${link}\n      icon: ${icon}\n`;
+    }
+    for (const f of sortedFiles) {
+        const ext = path.extname(f);
+        const baseName = path.basename(f, ext);
+        const label = baseName.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        const link = '/' + baseName.toLowerCase() + '/';
+        generatedActions += `    - text: "${label}"\n      link: ${link}\n      icon: document\n`;
+    }
     
     for (const file of files) {
 
@@ -165,6 +228,55 @@ async function sync() {
                     content = `---\ntitle: "${title}"\n---\n\n` + content;
                 }
             }
+
+            if (relativePath === 'docs' + path.sep + 'index.mdx' || relativePath === 'docs/index.mdx') {
+                const actionsMatch = content.match(/(\s+)actions:\s*\n([\s\S]*?)(?=---)/);
+                if (actionsMatch) {
+                    const indent = actionsMatch[1]; // should be '  '
+                    const originalActionsStr = actionsMatch[2];
+                    const actionBlocks = originalActionsStr.split(/(?=\s*-\s*text:)/g).filter(Boolean);
+                    
+                    const slidesActions = [];
+                    const externalActions = [];
+                    
+                    for (const block of actionBlocks) {
+                        const linkMatch = block.match(/link:\s*(\S+)/);
+                        if (linkMatch) {
+                            const link = linkMatch[1];
+                            if (link.startsWith('http://') || link.startsWith('https://') || link.startsWith('//')) {
+                                externalActions.push(block);
+                            } else if (link.startsWith('/slides')) {
+                                slidesActions.push(block);
+                            }
+                        }
+                    }
+                    
+                    let newActionsStr = `${indent}actions:\n`;
+                    for (const action of slidesActions) {
+                        newActionsStr += `    - text: Slides\n      link: /slides\n      icon: seti:video\n`;
+                    }
+                    newActionsStr += generatedActions;
+                    for (const action of externalActions) {
+                        const textMatch = action.match(/text:\s*(.+)/);
+                        const linkMatch = action.match(/link:\s*(\S+)/);
+                        const iconMatch = action.match(/icon:\s*(\S+)/);
+                        if (textMatch && linkMatch && iconMatch) {
+                            newActionsStr += `    - text: ${textMatch[1].trim()}\n      link: ${linkMatch[1].trim()}\n      icon: ${iconMatch[1].trim()}\n`;
+                        }
+                    }
+                    
+                    const fullOriginalActionsSection = indent + 'actions:\n' + originalActionsStr;
+                    const updatedContent = content.replace(fullOriginalActionsSection, newActionsStr);
+                    
+                    if (updatedContent !== content) {
+                        content = updatedContent;
+                        // Also write it back to the source file to keep it updated in the repo!
+                        await fs.writeFile(file, content, 'utf-8');
+                        console.log('Successfully regenerated and updated index.mdx actions list.');
+                    }
+                }
+            }
+
             await fs.writeFile(destPath, content, 'utf-8');
         } else {
             // just copy other files directly
@@ -176,6 +288,40 @@ async function sync() {
         console.error('\x1b[31mSync failed due to missing referenced images listed above.\x1b[0m');
         process.exit(1);
     }
+
+    // Write dynamic sidebar configuration to starlight.config.mjs
+    const sidebarItems = [];
+    for (const dir of sortedDirs) {
+        const label = dir.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        sidebarItems.push({
+            label: label,
+            autogenerate: { directory: dir }
+        });
+    }
+    for (const f of sortedFiles) {
+        const ext = path.extname(f);
+        const baseName = path.basename(f, ext);
+        const label = baseName.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        sidebarItems.push({
+            label: label,
+            slug: baseName.toLowerCase()
+        });
+    }
+
+    const configContent = `// Automatically generated by syncContent.mjs
+export default {
+  title: 'My Docs!',
+  customCss: [
+    'src/styles/custom-bugfix.css',
+  ],
+  sidebar: ${JSON.stringify(sidebarItems, null, 2)}
+};
+`;
+    const configPath = path.join(docsDestDir, 'docs', 'starlight.config.mjs');
+    await fs.mkdir(path.dirname(configPath), { recursive: true });
+    await fs.writeFile(configPath, configContent, 'utf-8');
+    console.log('Successfully generated dynamic starlight.config.mjs sidebar config.');
+
     console.log('Sync complete.');
 }
 
