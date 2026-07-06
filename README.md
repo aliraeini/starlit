@@ -1,6 +1,6 @@
 ## Usage
 
-To use this repo for your own documentation, presentations or weblog, add your contents to
+To use this repo for personal documentation, presentations or weblog, add your contents to
 `content/docs` and `content/slides` folders. Then use this repo as a template or subtree.
 
 ### Using this repo as a template
@@ -14,19 +14,29 @@ git remote remove origin
 git remote add origin <your-repo-url>
 ```
 
-Then follow the normal procedure for Astro/Starlight, and [pnpm development].
+Then follow the normal procedure for Astro/Starlight, and the development commands below.
 
 
 ### Using this as a subtree:
-The following command will add this repo as a subtree to your repo:
+The following command will add this repo as a subtree to your repo (using the `main` branch):
 ```
-git subtree add --prefix starlit  https://github.com/aliraeini/starlit.git  subtree  --squash
+git subtree add --prefix starlit https://github.com/aliraeini/starlit.git main --squash
+```
+Alternatively, you can just clone it inside the main repo and add its path to the main repo's .gitignore list!
+
+To build and serve on [local port 4321](http://localhost:4321/), run:
+
+```
+(cd starlit && pnpm dev)
 ```
 
-To build and deploy:
+Other relevant commands (from within the `starlit` directory):
 
 ```
-(cd starlit && pnpm build)
+pnpm install
+pnpm dev
+pnpm build
+pnpm preview
 ```
 
 ## Background
@@ -37,15 +47,3 @@ pnpm create astro@latest -- --template starlight
 ```
 
 and merged with reveal.js example.
-
-
-## pnpm development
-
-Typical commands:
-
-```
-pnpm install
-pnpm dev
-pnpm build
-pnpm preview
-```

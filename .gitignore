@@ -2,6 +2,7 @@
 # auto-synced content
 src/content/
 src/slides/
+src/content/docs/index.mdx
 
 # Trust pnpm for now
 pnpm-lock.yaml

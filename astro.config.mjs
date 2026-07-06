@@ -6,20 +6,9 @@ import tailwindcss from "@tailwindcss/vite";
 import remarkMath from 'remark-math';
 import rehypeMathjax from 'rehype-mathjax';
 
-let starlightConfig = { // default one, to be overwritten from src/content/docs/starlightConfig.mjs
+let starlightConfig = { // default one, to be overwritten from src/content/docs/starlight.config.mjs
 	title: 'My Docs!',
-	sidebar: [
-		{
-			label: 'Guides',
-			items: [ // Each item here is one entry in the navigation menu.
-				{ label: 'Example Guide', slug: 'guides/example' },
-			],
-		},
-		{
-			label: 'Reference',
-			autogenerate: { directory: 'reference' },
-		},
-	],
+	sidebar: [],
 	customCss: [ // Relative path to your custom CSS file
 		'src/styles/custom-bugfix.css',
 	],
@@ -50,7 +39,8 @@ export default defineConfig({
 				targets: [
 					{
 						src: '../public/*',
-						dest: './'  // Copies to the root of the dist/ directory
+						dest: './',  // Copies to the root of the dist/ directory
+						allowEmpty: true
 					}
 				]
 			})
